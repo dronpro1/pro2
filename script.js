@@ -1,3 +1,13 @@
+// Helper function to save data to localStorage
+function saveData(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+// Helper function to retrieve data from localStorage
+function getData(key) {
+  return JSON.parse(localStorage.getItem(key)) || [];
+}
+
 // Trip Management
 const tripForm = document.getElementById('trip-form');
 const cancelTripBtn = document.getElementById('cancel-trip');
@@ -6,7 +16,9 @@ tripForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const formData = new FormData(tripForm);
   const tripData = Object.fromEntries(formData);
-  localStorage.setItem('tripData', JSON.stringify(tripData));
+  const trips = getData('trips');
+  trips.push(tripData);
+  saveData('trips', trips);
   generateInvoice(tripData);
   tripForm.reset();
 });
@@ -14,7 +26,6 @@ tripForm.addEventListener('submit', (e) => {
 cancelTripBtn.addEventListener('click', () => {
   const confirmCancel = confirm('Are you sure you want to cancel this trip?');
   if (confirmCancel) {
-    localStorage.removeItem('tripData');
     tripForm.reset();
   }
 });
@@ -36,7 +47,7 @@ analysisForm.addEventListener('submit', (e) => {
   const formData = new FormData(analysisForm);
   const analysisData = Object.fromEntries(formData);
   const { startDate, endDate } = analysisData;
-  const tripData = JSON.parse(localStorage.getItem('tripData')) || [];
+  const tripData = getData('trips');
   
   const filteredData = tripData.filter((trip) => {
     const tripDate = new Date(trip.date);
@@ -52,7 +63,7 @@ analysisForm.addEventListener('submit', (e) => {
 });
 
 revenueAllocationForm.addEventListener('submit', (e) => {
-  e.preventDefault();
+  e
   const formData = new FormData(revenueAllocationForm);
   const allocationData = Object.fromEntries(formData);
   const { futureProjectsAllocation, profitAllocation } = allocationData;
@@ -79,8 +90,24 @@ function displayExpenditureBreakdown(tripData) {
 const searchTripsInput = document.getElementById('search-trips');
 const filterTripsSelect = document.getElementById('filter-trips');
 const exportTripsBtn = document.getElementById('export-trips');
-const tripHistoryTable = document.getElementById('trip-history- patientDemographicsChart = document.getElementById('patient-demographics-chart');
+const tripHistoryTable = document.getElementById('trip-history-table');
+const patientDemographicsChart = document.getElementById('patient-demographics-chart');
 const tripFrequencyChart = document.getElementById('trip-frequency-chart');
+
+function displayTripHistory(trips) {
+  tripHistoryTable.innerHTML = '';
+  trips.forEach((trip) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${trip.patientName}</td>
+      <td>${trip.originCity}</td>
+      <td>${trip.destinationCity}</td>
+      <td>${trip.ambulanceNumber}</td>
+      <td>${trip.date}</td>
+    `;
+    tripHistoryTable.appendChild(row);
+  });
+}
 
 searchTripsInput.addEventListener('input', () => {
   const searchTerm = searchTripsInput.value.toLowerCase();
@@ -95,39 +122,47 @@ filterTripsSelect.addEventListener('change', () => {
 });
 
 exportTripsBtn.addEventListener('click', () => {
-  const tripData = JSON.parse(localStorage.getItem('tripData')) || [];
+  const tripData = getData('trips');
   exportData(tripData, 'trips');
 });
 
 function filterTripHistory(searchTerm, filterCriteria) {
-  const tripData = JSON.parse(localStorage.getItem('tripData')) || [];
-  // Filter trip data based on search term and filter criteria
-  // Return filtered trips
-}
-
-function displayTripHistory(trips) {
-  // Display trip history in the table
+  const tripData = getData('trips');
+  let filteredTrips = tripData;
+  
+  if (searchTerm) {
+    filteredTrips = filteredTrips.filter((trip) =>
+      Object.values(trip).some((value) =>
+        String(value).toLowerCase().includes(searchTerm)
+      )
+    );
+  }
+  
+  if (filterCriteria) {
+    filteredTrips = filteredTrips.filter((trip) => trip[filterCriteria]);
+  }
+  
+  return filteredTrips;
 }
 
 function updatePatientDemographicsChart() {
-  const tripData = JSON.parse(localStorage.getItem('tripData')) || [];
+  const tripData = getData('trips');
   // Analyze patient demographics and update chart
 }
 
 function updateTripFrequencyChart() {
-  const tripData = JSON.parse(localStorage.getItem('tripData')) || [];
+  const tripData = getData('trips');
   // Analyze trip frequency and update chart
 }
 
 // Visualization Tools
 const dashboardCharts = document.querySelectorAll('#dashboard canvas');
 const customGraphForm = document.getElementById('custom-graph-form');
-const customGraph = document.getElementById('custom-graph');
-const comparisonForm = document.getElementById('comparison-form');
+const customGraph = document.getElementById('custom-graph');arisonForm = document.getElementById('comparison-form');
 const comparisonReport = document.getElementById('comparison-report');
 
 function updateDashboardCharts() {
-  const tripData = JSON.parse(localStorage.getItem('tripData')) || [];
+  const tripData = getData('trips');
   // Update dashboard charts with latest data
 }
 
@@ -187,7 +222,8 @@ function generateComplianceReport() {
   // Generate compliance report
 }
 
-function updateAmbulanceProfitabilityconst tripData = JSON.parse(localStorage.getItem('tripData')) || [];
+function updateAmbulanceProfitability() {
+  const tripData = getData('trips');
   // Calculate profitability by ambulance and update table
 }
 
@@ -205,7 +241,7 @@ trackAmbulanceBtn.addEventListener('click', () => {
 });
 
 function trackAmbulanceMovement(ambulanceId, startDate, endDate) {
-  const tripData = JSON.parse(localStorage.getItem('tripData')) || [];
+  const tripData = getData('trips');
   // Filter trips for the selected ambulance and date range
   // Display ambulance movement on the map
 }
@@ -217,7 +253,7 @@ function updateAmbulanceStatus() {
 // Automation Tools
 const alertForm = document.getElementById('alert-form');
 const activeAlerts = document.getElementById('active-alerts');
-const reportForm = document.getElementById('report-form');
+const reportForm = document.getElementById('report-form
 
 alertForm.addEventListener('submit', (e) => {
   e.preventDefault();
@@ -255,19 +291,19 @@ leadForm.addEventListener('submit', (e) => {
 });
 
 function saveLead(leadData) {
-  const leads = JSON.parse(localStorage.getItem('leads')) || [];
+  const leads = getData('leads');
   leads.push(leadData);
-  localStorage.setItem('leads', JSON.stringify(leads));
+  saveData('leads', leads);
   updateLeadTracker();
 }
 
 function updateLeadTracker() {
-  const leads = JSON.parse(localStorage.getItem('leads')) || [];
+  const leads = getData('leads');
   // Update lead tracker table with latest leads
 }
 
 function updateConversionChart() {
-  const leads = JSON.parse(localStorage.getItem('leads')) || [];
+  const leads = getData('leads');
   // Analyze lead conversion and update chart
 }
 
@@ -291,16 +327,30 @@ importForm.addEventListener('submit', (e) => {
 
 function exportData(options) {
   const { exportData, exportFormat } = options;
-  // Export selected data in the specified format
+  let data = [];
+  
+  if (exportData === 'trips') {
+    data = getData('trips');
+  } else if (exportData === 'financials') {
+    // Get financial data from localStorage or generate it
+  } else if (exportData === 'analytics') {
+    // Get analytics data from localStorage or generate it
+  }
+  
+  // Export data in the specified format (CSV, JSON, PDF)
 }
 
 function importData(file) {
-  // Import data from the selected file
+  // Read the imported file and parse its data
+  // Store the imported data in localStorage
 }
 
 // Initialize the application
 function init() {
-  updateDashboardChartsPatientDemographicsChart();
+  const trips = getData('trips');
+  displayTripHistory(trips);
+  updateDashboardCharts();
+  updatePatientDemographicsChart();
   updateTripFrequencyChart();
   updateAmbulanceProfitability();
   updateAmbulanceStatus();
